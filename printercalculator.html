@@ -222,6 +222,26 @@
             font-size: 13px;
             color: #856404;
         }
+
+        .nav-btn {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: rgb(7, 1, 1);
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(0, 0, 0, 0.803);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -229,6 +249,12 @@
         <div class="header">
             <h1>🖨️ 3D Принтер Калкулатор</h1>
             <p>Изчислете колко принтера са ви нужни за вашите поръчки</p>
+            
+            <div style="margin-top: 20px; ">
+                <a href="https://gendov31.github.io/calculator/system.html" class="nav-btn">
+                    🎨 Система за управление на поръчки
+                </a>
+            </div>
         </div>
 
         <form id="calculatorForm">
@@ -239,6 +265,15 @@
                     <span class="input-icon">📦</span>
                 </div>
                 <div class="tip">Общ брой фигурки, които трябва да отпечатате</div>
+            </div>
+
+            <div class="input-group">
+                <label for="hoursPerFigure">Часове за една фигурка</label>
+                <div class="input-wrapper">
+                    <input type="number" id="hoursPerFigure" min="0.1" step="0.1" value="2" placeholder="Въведете часове за една фигурка" required>
+                    <span class="input-icon">🕐</span>
+                </div>
+                <div class="tip">Колко часа отнема печатането на една фигурка</div>
             </div>
 
             <div class="input-group">
@@ -261,7 +296,7 @@
 
         <div class="info-section">
             <h3>ℹ️ Как работи калкулаторът?</h3>
-            <p>Калкулаторът предполага, че един принтер може да отпечата 4 фигурки за 8 часа (0.5 фигурки на час). Въз основа на вашите поръчки и наличното време, се изчислява минималният брой принтери, които са ви необходими.</p>
+            <p>Калкулаторът изчислява минималният брой принтери, които са ви необходими въз основа на броя поръчки, времето за печат на една фигурка и наличното ви време. Всеки принтер работи паралелно с останалите.</p>
         </div>
     </div>
 
@@ -283,7 +318,7 @@
             }, 100);
         });
 
-        // Валидация в реalno време
+        // Валидация в реално време
         const inputs = document.querySelectorAll('input');
         inputs.forEach(input => {
             input.addEventListener('input', validateForm);
@@ -299,10 +334,12 @@
 
         function validateForm() {
             const orders = document.getElementById('orders').value;
+            const hoursPerFigure = document.getElementById('hoursPerFigure').value;
             const hours = document.getElementById('hours').value;
             
-            const isValid = orders && hours && 
+            const isValid = orders && hoursPerFigure && hours && 
                            parseFloat(orders) > 0 && 
+                           parseFloat(hoursPerFigure) > 0 &&
                            parseFloat(hours) > 0;
             
             calculateBtn.disabled = !isValid;
@@ -331,6 +368,7 @@
 
         function calculatePrinters() {
             const orders = parseInt(document.getElementById('orders').value);
+            const hoursPerFigure = parseFloat(document.getElementById('hoursPerFigure').value);
             const hours = parseFloat(document.getElementById('hours').value);
 
             // Показваме loading анимация
@@ -338,24 +376,24 @@
 
             // Симулираме кратко забавяне за по-добро UX
             setTimeout(() => {
-                if (isNaN(orders) || isNaN(hours) || orders <= 0 || hours <= 0) {
+                if (isNaN(orders) || isNaN(hoursPerFigure) || isNaN(hours) || 
+                    orders <= 0 || hoursPerFigure <= 0 || hours <= 0) {
                     showResult(`
                         <span class="result-icon">⚠️</span>
                         <div>Моля, въведете валидни стойности!</div>
                         <div style="font-size: 14px; margin-top: 10px; opacity: 0.8;">
-                            Поръчките трябва да са положително число, а времето - над 0.
+                            Всички стойности трябва да са положителни числа.
                         </div>
                     `, true);
                     hideLoading();
                     return;
                 }
 
-                const printerSpeedPerHour = 4 / 8; // 0.5 фигурки на час
-                const printerCapacity = printerSpeedPerHour * hours;
+                const printerCapacity = hours / hoursPerFigure; // колко фигурки може един принтер за наличното време
                 const requiredPrinters = Math.ceil(orders / printerCapacity);
                 
-                const timePerOrder = 1 / printerSpeedPerHour; // часа на фигурка
-                const totalTime = orders * timePerOrder;
+                const totalTime = orders * hoursPerFigure;
+                const efficiency = (orders / (requiredPrinters * printerCapacity) * 100).toFixed(1);
 
                 showResult(`
                     <span class="result-icon">🎯</span>
@@ -366,7 +404,8 @@
                         📊 Детайли:<br>
                         • Общо време за печат: ${totalTime.toFixed(1)} часа<br>
                         • Капацитет на принтер: ${printerCapacity.toFixed(1)} фигурки за ${hours}ч<br>
-                        • Време за фигурка: ${timePerOrder.toFixed(1)} часа
+                        • Време за фигурка: ${hoursPerFigure} часа<br>
+                        • Ефективност: ${efficiency}%
                     </div>
                 `);
                 
