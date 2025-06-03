@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Принтер Калкулатор</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            color: #444;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fff;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .input-group input:invalid {
+            border-color: #ff6b6b;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 18px;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        .calculate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .result.error {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #d63031;
+        }
+
+        .result-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .info-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-section p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .loading {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+
+        .tip {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖨️ 3D Принтер Калкулатор</h1>
+            <p>Изчислете колко принтера са ви нужни за вашите поръчки</p>
+        </div>
+
+        <form id="calculatorForm">
+            <div class="input-group">
+                <label for="orders">Брой поръчки</label>
+                <div class="input-wrapper">
+                    <input type="number" id="orders" min="1" step="1" placeholder="Въведете брой поръчки" required>
+                    <span class="input-icon">📦</span>
+                </div>
+                <div class="tip">Общ брой фигурки, които трябва да отпечатате</div>
+            </div>
+
+            <div class="input-group">
+                <label for="hours">Налично време (часове)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="hours" min="0.1" step="0.1" placeholder="Въведете налично време" required>
+                    <span class="input-icon">⏰</span>
+                </div>
+                <div class="tip">Колко часа имате на разположение за печат</div>
+            </div>
+
+            <button type="submit" class="calculate-btn" id="calculateBtn">
+                Изчисли принтери
+            </button>
+            
+            <div class="loading" id="loading"></div>
+        </form>
+
+        <div id="result" class="result"></div>
+
+        <div class="info-section">
+            <h3>ℹ️ Как работи калкулаторът?</h3>
+            <p>Калкулаторът предполага, че един принтер може да отпечата 4 фигурки за 8 часа (0.5 фигурки на час). Въз основа на вашите поръчки и наличното време, се изчислява минималният брой принтери, които са ви необходими.</p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('calculatorForm');
+        const resultDiv = document.getElementById('result');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const loading = document.getElementById('loading');
+
+        // Добавяме анимация при зареждане
+        window.addEventListener('load', () => {
+            document.querySelector('.container').style.opacity = '0';
+            document.querySelector('.container').style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                document.querySelector('.container').style.transition = 'all 0.6s ease';
+                document.querySelector('.container').style.opacity = '1';
+                document.querySelector('.container').style.transform = 'translateY(0)';
+            }, 100);
+        });
+
+        // Валидация в реalno време
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', validateForm);
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (validateForm()) {
+                        calculatePrinters();
+                    }
+                }
+            });
+        });
+
+        function validateForm() {
+            const orders = document.getElementById('orders').value;
+            const hours = document.getElementById('hours').value;
+            
+            const isValid = orders && hours && 
+                           parseFloat(orders) > 0 && 
+                           parseFloat(hours) > 0;
+            
+            calculateBtn.disabled = !isValid;
+            return isValid;
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculatePrinters();
+        });
+
+        function showLoading() {
+            calculateBtn.style.display = 'none';
+            loading.style.display = 'block';
+        }
+
+        function hideLoading() {
+            calculateBtn.style.display = 'block';
+            loading.style.display = 'none';
+        }
+
+        function showResult(content, isError = false) {
+            resultDiv.innerHTML = content;
+            resultDiv.className = `result show ${isError ? 'error' : 'success'}`;
+        }
+
+        function calculatePrinters() {
+            const orders = parseInt(document.getElementById('orders').value);
+            const hours = parseFloat(document.getElementById('hours').value);
+
+            // Показваме loading анимация
+            showLoading();
+
+            // Симулираме кратко забавяне за по-добро UX
+            setTimeout(() => {
+                if (isNaN(orders) || isNaN(hours) || orders <= 0 || hours <= 0) {
+                    showResult(`
+                        <span class="result-icon">⚠️</span>
+                        <div>Моля, въведете валидни стойности!</div>
+                        <div style="font-size: 14px; margin-top: 10px; opacity: 0.8;">
+                            Поръчките трябва да са положително число, а времето - над 0.
+                        </div>
+                    `, true);
+                    hideLoading();
+                    return;
+                }
+
+                const printerSpeedPerHour = 4 / 8; // 0.5 фигурки на час
+                const printerCapacity = printerSpeedPerHour * hours;
+                const requiredPrinters = Math.ceil(orders / printerCapacity);
+                
+                const timePerOrder = 1 / printerSpeedPerHour; // часа на фигурка
+                const totalTime = orders * timePerOrder;
+
+                showResult(`
+                    <span class="result-icon">🎯</span>
+                    <div style="font-size: 24px; margin-bottom: 15px;">
+                        Нужни принтери: <strong>${requiredPrinters}</strong>
+                    </div>
+                    <div style="font-size: 14px; opacity: 0.9; line-height: 1.4;">
+                        📊 Детайли:<br>
+                        • Общо време за печат: ${totalTime.toFixed(1)} часа<br>
+                        • Капацитет на принтер: ${printerCapacity.toFixed(1)} фигурки за ${hours}ч<br>
+                        • Време за фигурка: ${timePerOrder.toFixed(1)} часа
+                    </div>
+                `);
+                
+                hideLoading();
+            }, 800);
+        }
+
+        // Инициализация
+        validateForm();
+    </script>
+</body>
+</html>
